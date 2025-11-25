@@ -152,7 +152,9 @@ export default function NewStudentPage() {
               Back to Dashboard
             </Button>
           </div>
-          <DarkModeToggle />
+          <div className="flex-shrink-0">
+            <DarkModeToggle />
+          </div>
         </div>
         <Card>
           <CardHeader>

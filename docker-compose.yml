@@ -10,6 +10,7 @@ services:
     volumes:
       - ./data:/app/data
       - ./.env.local:/app/.env.local
+      - ./admin-credentials.json:/app/admin-credentials.json
     environment:
       - NODE_ENV=production
     restart: always
