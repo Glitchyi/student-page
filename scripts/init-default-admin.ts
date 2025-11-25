@@ -1,5 +1,5 @@
 import { createUser } from '../lib/auth';
-import { writeFileSync, existsSync } from 'fs';
+import { writeFileSync, existsSync, statSync, rmdirSync, unlinkSync } from 'fs';
 import { join } from 'path';
 
 // Initialize database first
@@ -10,9 +10,26 @@ async function main() {
   try {
     // Check if credentials file already exists
     const credentialsPath = join(process.cwd(), 'admin-credentials.json');
+    
+    // Check if path exists and if it's a directory, remove it
     if (existsSync(credentialsPath)) {
-      console.log('Admin credentials file already exists. Skipping default admin creation.');
-      return;
+      try {
+        const stats = statSync(credentialsPath);
+        if (stats.isDirectory()) {
+          console.log('Found admin-credentials.json as a directory, removing it...');
+          rmdirSync(credentialsPath, { recursive: true });
+        } else if (stats.isFile()) {
+          console.log('Admin credentials file already exists. Skipping default admin creation.');
+          return;
+        }
+      } catch (err) {
+        // If we can't stat it, try to remove it anyway
+        try {
+          unlinkSync(credentialsPath);
+        } catch (e) {
+          // Ignore errors
+        }
+      }
     }
 
     // Check if any admin already exists by querying all users
@@ -43,7 +60,14 @@ async function main() {
       note: 'Please change this password after first login for security.'
     };
 
-    writeFileSync(credentialsPath, JSON.stringify(credentials, null, 2));
+    // Ensure we write as a file, not a directory
+    writeFileSync(credentialsPath, JSON.stringify(credentials, null, 2), { flag: 'w', encoding: 'utf8' });
+    
+    // Verify it was created as a file
+    const stats = statSync(credentialsPath);
+    if (!stats.isFile()) {
+      throw new Error('Failed to create admin-credentials.json as a file');
+    }
     
     console.log('\n========================================');
     console.log('DEFAULT ADMIN CREDENTIALS');
