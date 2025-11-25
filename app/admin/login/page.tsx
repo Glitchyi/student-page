@@ -6,10 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { LogIn, Mail, Lock, UserPlus, Shield, ArrowRight } from 'lucide-react';
+import { Shield, Mail, Lock, ArrowRight, LogIn } from 'lucide-react';
 import Link from 'next/link';
 
-export default function LoginPage() {
+export default function AdminLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -25,7 +25,7 @@ export default function LoginPage() {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, role: 'admin' }),
       });
 
       const data = await response.json();
@@ -36,12 +36,13 @@ export default function LoginPage() {
         return;
       }
 
-      // Redirect based on role
-      if (data.user.role === 'admin') {
-        router.push('/admin/dashboard');
-      } else {
-        router.push('/teacher/dashboard');
+      if (data.user.role !== 'admin') {
+        setError('Access denied. Admin account required.');
+        setLoading(false);
+        return;
       }
+
+      router.push('/admin/dashboard');
     } catch (err) {
       setError('An error occurred. Please try again.');
       setLoading(false);
@@ -54,11 +55,11 @@ export default function LoginPage() {
         <CardHeader className="text-center">
           <div className="flex justify-center mb-2">
             <div className="p-3 bg-primary/10 rounded-full">
-              <LogIn className="h-8 w-8 text-primary" />
+              <Shield className="h-8 w-8 text-primary" />
             </div>
           </div>
-          <CardTitle>Teacher Login</CardTitle>
-          <CardDescription>Enter your credentials to access your dashboard</CardDescription>
+          <CardTitle>Admin Login</CardTitle>
+          <CardDescription>Enter your admin credentials</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -75,7 +76,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  placeholder="teacher@example.com"
+                  placeholder="admin@example.com"
                   className="pl-9"
                 />
               </div>
@@ -114,23 +115,16 @@ export default function LoginPage() {
               )}
             </Button>
           </form>
-          <div className="mt-4 text-center text-sm space-y-2">
-            <div>
-              <span className="text-muted-foreground">Don't have an account? </span>
-              <Link href="/register" className="text-primary hover:underline flex items-center justify-center gap-1 inline-flex">
-                <UserPlus className="h-3 w-3" />
-                Register
-              </Link>
-            </div>
-            <div>
-              <Link href="/admin/login" className="text-primary hover:underline flex items-center justify-center gap-1 inline-flex">
-                <Shield className="h-3 w-3" />
-                Admin Login
-              </Link>
-            </div>
+          <div className="mt-4 text-center text-sm">
+            <Link href="/" className="text-primary hover:underline flex items-center justify-center gap-1 inline-flex">
+              <LogIn className="h-3 w-3" />
+              Teacher Login
+            </Link>
           </div>
         </CardContent>
       </Card>
     </div>
   );
 }
+
+
